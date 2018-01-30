@@ -213,7 +213,7 @@ func Prepay(c echo.Context) error {
 	prePayParam["nonceStr"] = result["nonce_str"]
 	prePayParam["signType"] = "MD5"
 	prePayParam["appId"] = result["appid"]
-	prePayParam["pay_sign"] = sign.MakeMd5Sign(base.JoinMapObject(prePayParam), account.Key)
+	prePayParam["paySign"] = sign.MakeMd5Sign(base.JoinMapObject(prePayParam), account.Key)
 
 	return c.JSON(http.StatusOK, kmodel.Result{Success: true, Result: prePayParam})
 }

@@ -204,7 +204,7 @@ func PrepayRespParam(reqDto *ReqPrepayEasyDto, account *model.WxAccount) (prePay
 	prePayParam["nonceStr"] = result["nonce_str"]
 	prePayParam["signType"] = "MD5"
 	prePayParam["appId"] = result["appid"]
-	prePayParam["pay_sign"] = sign.MakeMd5Sign(base.JoinMapObject(prePayParam), account.Key)
+	prePayParam["paySign"] = sign.MakeMd5Sign(base.JoinMapObject(prePayParam), account.Key)
 	prePayParam["jwtToken"], _ = auth.NewToken(map[string]interface{}{"type": "ticket"})
 	return
 }
