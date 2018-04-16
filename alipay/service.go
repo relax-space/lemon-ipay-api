@@ -23,7 +23,7 @@ func NotifyQuery(account *model.AlAccount, outTradeNo string) (result *paysdk.Re
 		PubKey: account.PubKey,
 	}
 	reqDto.OutTradeNo = outTradeNo
-	result, err = paysdk.Query(&reqDto, customDto)
+	_, _, result, err = paysdk.Query(&reqDto, customDto)
 	return
 }
 
@@ -59,7 +59,7 @@ func NotifyValidN(body, signParam, outTradeNo, totalAmount string, mapParam map[
 	}
 
 	//2.valid data
-	queryDto, err := NotifyQuery(&account, outTradeNo)
+	queryDto, err := NotifyQuery(account, outTradeNo)
 	if err != nil {
 		return
 	}

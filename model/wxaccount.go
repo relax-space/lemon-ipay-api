@@ -29,8 +29,9 @@ func (WxAccount) TableName() string {
 	return "wechat"
 }
 
-func (WxAccount) Get(eId int64) (account WxAccount, err error) {
-	has, err := Db.Where("e_id =?", eId).Get(&account)
+func (WxAccount) Get(eId int64) (account *WxAccount, err error) {
+	account = &WxAccount{}
+	has, err := Db.Where("e_id =?", eId).Get(account)
 	if err != nil {
 		return
 	} else if !has {

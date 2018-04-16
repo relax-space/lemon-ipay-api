@@ -16,6 +16,7 @@ import (
 
 	"github.com/relax-space/go-kit/base"
 	"github.com/relax-space/go-kit/data"
+	"github.com/relax-space/go-kit/log"
 	"github.com/relax-space/go-kit/sign"
 
 	wxpay "github.com/relax-space/lemon-wxpay-sdk"
@@ -25,10 +26,20 @@ import (
 )
 
 func Pay(c echo.Context) error {
-	reqDto := ReqPayDto{}
-	if err := c.Bind(&reqDto); err != nil {
+	b, err := ioutil.ReadAll(c.Request().Body)
+	defer c.Request().Body.Close()
+
+	log.Info(fmt.Sprintf("Bind request param:%+v--err:%+v", string(b), err))
+	var reqDto ReqPayDto
+	if err := json.Unmarshal(b, &reqDto); err != nil {
+		log.Error(fmt.Sprintf("err:%+v", err))
 		return c.JSON(http.StatusBadRequest, kmodel.Result{Success: false, Error: kmodel.Error{Code: 10004, Message: err.Error()}})
 	}
+
+	// reqDto := ReqPayDto{}
+	// if err := c.Bind(&reqDto); err != nil {
+	// 	return c.JSON(http.StatusBadRequest, kmodel.Result{Success: false, Error: kmodel.Error{Code: 10004, Message: err.Error()}})
+	// }
 
 	account, err := model.WxAccount{}.Get(reqDto.EId)
 	if err != nil {
@@ -44,7 +55,7 @@ func Pay(c echo.Context) error {
 		Key: account.Key,
 	}
 
-	result, err := wxpay.Pay(reqDto.ReqPayDto, &customDto)
+	_, _, result, err := wxpay.Pay(reqDto.ReqPayDto, &customDto)
 	if err != nil {
 		if err.Error() == wxpay.MESSAGE_PAYING {
 			outTradeNo := result["out_trade_no"].(string)
@@ -52,7 +63,7 @@ func Pay(c echo.Context) error {
 				ReqBaseDto: reqDto.ReqBaseDto,
 				OutTradeNo: outTradeNo,
 			}
-			result, err = wxpay.LoopQuery(&queryDto, &customDto, 40, 2)
+			_, _, result, err = wxpay.LoopQuery(&queryDto, &customDto, 40, 2)
 			if err == nil {
 				return c.JSON(http.StatusOK, kmodel.Result{Success: true, Result: result})
 			} else {
@@ -60,7 +71,7 @@ func Pay(c echo.Context) error {
 					ReqBaseDto: reqDto.ReqBaseDto,
 					OutTradeNo: outTradeNo,
 				}
-				if _, err = wxpay.Reverse(&reverseDto, &customDto, 10, 10); err != nil {
+				if _, _, _, err = wxpay.Reverse(&reverseDto, &customDto, 10, 10); err != nil {
 					return c.JSON(http.StatusInternalServerError, kmodel.Result{Success: false, Error: kmodel.Error{Code: 10004, Message: err.Error()}})
 				} else {
 					return c.JSON(http.StatusInternalServerError, kmodel.Result{Success: false, Error: kmodel.Error{Code: 10004, Message: "reverse sucess"}})
@@ -93,7 +104,7 @@ func Query(c echo.Context) error {
 	customDto := wxpay.ReqCustomerDto{
 		Key: account.Key,
 	}
-	result, err := wxpay.Query(reqDto.ReqQueryDto, &customDto)
+	_, _, result, err := wxpay.Query(reqDto.ReqQueryDto, &customDto)
 	if err != nil {
 		return c.JSON(http.StatusOK, kmodel.Result{Success: false, Error: kmodel.Error{Code: 10004, Message: err.Error()}})
 	}
@@ -120,7 +131,7 @@ func Refund(c echo.Context) error {
 		CertPathKey:  account.CertKey,
 		RootCa:       account.RootCa,
 	}
-	result, err := wxpay.Refund(reqDto.ReqRefundDto, &custDto)
+	_, _, result, err := wxpay.Refund(reqDto.ReqRefundDto, &custDto)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, kmodel.Result{Success: false, Error: kmodel.Error{Code: 10004, Message: err.Error()}})
 
@@ -149,7 +160,7 @@ func Reverse(c echo.Context) error {
 		CertPathKey:  account.CertKey,
 		RootCa:       account.RootCa,
 	}
-	result, err := wxpay.Reverse(reqDto.ReqReverseDto, &custDto, 10, 10)
+	_, _, result, err := wxpay.Reverse(reqDto.ReqReverseDto, &custDto, 10, 10)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, kmodel.Result{Success: false, Error: kmodel.Error{Code: 10004, Message: err.Error()}})
 
@@ -176,7 +187,7 @@ func RefundQuery(c echo.Context) error {
 	customDto := wxpay.ReqCustomerDto{
 		Key: account.Key,
 	}
-	result, err := wxpay.RefundQuery(reqDto.ReqRefundQueryDto, &customDto)
+	_, _, result, err := wxpay.RefundQuery(reqDto.ReqRefundQueryDto, &customDto)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, kmodel.Result{Success: false, Error: kmodel.Error{Code: 10004, Message: err.Error()}})
 	}
@@ -213,7 +224,7 @@ func Prepay(c echo.Context) error {
 
 	reqDto.ReqPrepayDto.TimeStart = ChinaDatetime().Format("20060102150405")
 	reqDto.ReqPrepayDto.TimeExpire = ChinaDatetime().Add(10 * time.Minute).Format("20060102150405")
-	result, err := wxpay.Prepay(reqDto.ReqPrepayDto, &customDto)
+	_, _, result, err := wxpay.Prepay(reqDto.ReqPrepayDto, &customDto)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, kmodel.Result{Success: false, Error: kmodel.Error{Code: 10004, Message: err.Error()}})
 	}

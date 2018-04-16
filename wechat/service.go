@@ -35,7 +35,7 @@ func NotifyQuery(account *model.WxAccount, outTradeNo string) (result map[string
 		Key: account.Key,
 	}
 	reqDto.OutTradeNo = outTradeNo
-	result, err = paysdk.Query(&reqDto, customDto)
+	_, _, result, err = paysdk.Query(&reqDto, customDto)
 	return
 }
 
@@ -73,7 +73,7 @@ func NotifyValid(body, signParam, outTradeNo string, totalAmount int64, dataPara
 	}
 	mapParam["attach"] = rawAttach
 	//2.valid data
-	queryMap, err := NotifyQuery(&account, outTradeNo)
+	queryMap, err := NotifyQuery(account, outTradeNo)
 	if err != nil {
 		return
 	}
@@ -173,7 +173,7 @@ func PrepayOpenId(c echo.Context) error {
 	}
 	reqDto.OpenId = respDto.OpenId
 	//3.get prepay param
-	prePayParam, err := PrepayRespParam(reqDto, &account)
+	prePayParam, err := PrepayRespParam(reqDto, account)
 	if err != nil {
 		return prepayErrorDirect(c, reqUrl, err.Error())
 	}
@@ -213,7 +213,7 @@ func PrepayRespParam(reqDto *ReqPrepayEasyDto, account *model.WxAccount) (prePay
 	customDto := paysdk.ReqCustomerDto{
 		Key: account.Key,
 	}
-	result, err := paysdk.Prepay(reqDto.ReqPrepayDto, &customDto)
+	_, _, result, err := paysdk.Prepay(reqDto.ReqPrepayDto, &customDto)
 	if err != nil {
 		return
 	}

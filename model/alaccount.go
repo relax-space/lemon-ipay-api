@@ -26,8 +26,9 @@ func (AlAccount) TableName() string {
 	return "alipay"
 }
 
-func (AlAccount) Get(eId int64) (account AlAccount, err error) {
-	has, err := Db.Where("e_id =?", eId).Get(&account)
+func (AlAccount) Get(eId int64) (account *AlAccount, err error) {
+	account = &AlAccount{}
+	has, err := Db.Where("e_id =?", eId).Get(account)
 	if err != nil {
 		return
 	} else if !has {

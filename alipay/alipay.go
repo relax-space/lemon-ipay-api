@@ -41,7 +41,7 @@ func Pay(c echo.Context) error {
 		PubKey: account.PubKey,
 	}
 
-	result, err := paysdk.Pay(reqDto.ReqPayDto, customDto)
+	_, _, result, err := paysdk.Pay(reqDto.ReqPayDto, customDto)
 	if err != nil {
 		if err.Error() == paysdk.MESSAGE_PAYING {
 			outTradeNo := result.OutTradeNo
@@ -49,7 +49,7 @@ func Pay(c echo.Context) error {
 				ReqBaseDto: reqDto.ReqBaseDto,
 				OutTradeNo: outTradeNo,
 			}
-			result, err = paysdk.LoopQuery(&queryDto, customDto, 40, 2)
+			_, _, result, err = paysdk.LoopQuery(&queryDto, customDto, 40, 2)
 			if err == nil {
 				return c.JSON(http.StatusOK, kmodel.Result{Success: true, Result: result})
 			} else {
@@ -57,7 +57,7 @@ func Pay(c echo.Context) error {
 					ReqBaseDto: reqDto.ReqBaseDto,
 					OutTradeNo: outTradeNo,
 				}
-				if _, err = paysdk.Reverse(&reverseDto, customDto, 10, 10); err != nil {
+				if _, _, _, err = paysdk.Reverse(&reverseDto, customDto, 10, 10); err != nil {
 					return c.JSON(http.StatusInternalServerError, kmodel.Result{Success: false, Error: kmodel.Error{Code: 10004, Message: err.Error()}})
 				} else {
 					return c.JSON(http.StatusOK, kmodel.Result{Success: false, Error: kmodel.Error{Code: 10004, Message: "reverse success"}})
@@ -89,7 +89,7 @@ func Query(c echo.Context) error {
 		PriKey: account.PriKey,
 		PubKey: account.PubKey,
 	}
-	result, err := paysdk.Query(reqDto.ReqQueryDto, customDto)
+	_, _, result, err := paysdk.Query(reqDto.ReqQueryDto, customDto)
 	if err != nil {
 		return c.JSON(http.StatusOK, kmodel.Result{Success: false, Error: kmodel.Error{Code: 10004, Message: err.Error()}})
 	}
@@ -113,7 +113,7 @@ func Refund(c echo.Context) error {
 		PriKey: account.PriKey,
 		PubKey: account.PubKey,
 	}
-	result, err := paysdk.Refund(reqDto.ReqRefundDto, customDto)
+	_, _, result, err := paysdk.Refund(reqDto.ReqRefundDto, customDto)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, kmodel.Result{Success: false, Error: kmodel.Error{Code: 10004, Message: err.Error()}})
 
@@ -139,7 +139,7 @@ func Reverse(c echo.Context) error {
 		PriKey: account.PriKey,
 		PubKey: account.PubKey,
 	}
-	result, err := paysdk.Reverse(reqDto.ReqReverseDto, customDto, 10, 10)
+	_, _, result, err := paysdk.Reverse(reqDto.ReqReverseDto, customDto, 10, 10)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, kmodel.Result{Success: false, Error: kmodel.Error{Code: 10004, Message: err.Error()}})
 
@@ -196,7 +196,7 @@ func Prepay(c echo.Context) error {
 		PriKey: account.PriKey,
 		PubKey: account.PubKey,
 	}
-	result, err := paysdk.Prepay(reqDto.ReqPrepayDto, customDto)
+	_, _, result, err := paysdk.Prepay(reqDto.ReqPrepayDto, customDto)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, kmodel.Result{Success: false, Error: kmodel.Error{Code: 10004, Message: err.Error()}})
 	}
